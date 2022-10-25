@@ -12,8 +12,8 @@ str(Budget_review)
 data <- Budget_review                   # Duplicate data frame
 names(Budget_review)                    # Check column names
 
-x1 <- data$`Total Budgeted Financing ($'000)`
-lbl <- data$`Wellbeing Domain/ Government Priority`
+totalBudgetedFin <- data$`Total Budgeted Financing ($'000)`
+domPriority <- data$`Wellbeing Domain/ Government Priority`
 pclas <- data$`Project Classification`
 ptyp <- data$`Project Type`
 library(plotly)
@@ -22,14 +22,22 @@ library(plotly)
 # USPersonalExpenditure
 # data <- USPersonalExpenditure[,c('Categorie', 'X1960')]
 
-fig <- plot_ly(data, labels = ~lbl, values = ~x1, type = 'pie')
-fig <- fig %>% layout(title = 'Wellbeing Domain/ Government Priority by Total Budgeted Financing',
+fig <- plot_ly(data, labels = ~domPriority, values = ~totalBudgetedFin, type = 'pie')
+fig <- fig %>% layout(title = 'Government Priority by Total Budgeted Financing Till 2026',
                       xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
                       yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
 
+# goals for their budget
 fig
-plot_ly(data, labels = ~pclas, values = ~x1, type = 'pie')
-plot_ly(data, labels = ~ptyp, values = ~x1, type = 'pie')
+# make plotply bar chart
+plot_ly(data, x = ~domPriority, y = ~totalBudgetedFin, type = 'bar')
+
+
+# things they are working or will be working on
+plot_ly(data, x = ~pclas, y = ~domPriority, type = 'scatter', mode = 'markers')
+
+plot_ly(data, labels = ~pclas, values = ~totalBudgetedFin, type = 'pie')
+plot_ly(data, labels = ~ptyp, values = ~totalBudgetedFin, type = 'pie')
 # order data by total budgeted financing in descending order
 totalBudgetOrdered <- data[order(-data$`Total Budgeted Financing ($'000)`),]
 top10 <- head(totalBudgetOrdered,10)
@@ -70,15 +78,25 @@ budgetProgressPerType
 budgetProgressPerTypeTop5 <- budgetProgressPerType[(budgetProgressPerType$`Project Type` %in% classesWithMostTotalBudget$`Project Type`),]
 budgetProgressPerTypeTop5
 
-budgetTypeByYear <- budgetProgressPerType %>%
-  gather(key = "bud_year", value = "budget", -`Project Type`)
-# make line chart of budget progress per type
-budgetTypeByYear %>%
+budgetProgressPerType %>%
+  gather(key = "bud_year", value = "budget", -`Project Type`) %>%
   ggplot(aes(x = bud_year, y = budget, color = `Project Type`, group = `Project Type`)) +
   geom_line() +
   geom_point(size=2) +
   labs(title = "Budget Progress per Type", x = "Project Type", y = "Budget ($'000)")
 
+# taking top 5 project types
+budgetProgressPerTypeTop5 %>%
+  gather(key = "bud_year", value = "budget", -`Project Type`) %>%
+  ggplot(aes(x = bud_year, y = budget, color = `Project Type`, group = `Project Type`)) +
+  geom_line(size=2) +
+  geom_point(size=3) +
+  # geom_smooth(method = "lm", se = FALSE, size = .5) +
+  labs(title = "Budget Progress per Type", x = "Project Type", y = "Budget ($'000)")
+
+# add trend line
+# fig2 <- fig2 + geom_smooth(method = "lm", se = FALSE, color = "grey", size = 1)
+fig2
 budgetProgressPerType
 # plot budget progress per type
 budgetProgressPerType %>%
@@ -101,3 +119,7 @@ top10 %>%
   labs(title = "Top 10 Projects", x = "Project", y = "Budget ($'000)")
 
 
+# make a plotly barchart of top 10 projects
+top10 %>%
+  plot_ly(x = ~`Wellbeing Domain/ Government Priority`, y = ~`Total Budgeted Financing ($'000)`, type = 'bar', orientation = 'h') %>%
+  layout(title = 'Top 10 Projects', xaxis = list(title = 'Budget ($\'000)'), yaxis = list(title = 'Project'))
